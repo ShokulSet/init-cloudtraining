@@ -66,7 +66,7 @@ NODE_TYPE=$(select_option "${node_type[@]}")
 if [ "$NODE_TYPE" == "${node_type[0]}" ]; then
     processors=("1 (128c)" "1/2 (64c)" "1/4 (32c)" "1/8 (16c)")
 elif [ "$NODE_TYPE" == "${node_type[1]}" ]; then
-    processors=("1/2 (64c)" "1/4 (32c)" "1/8 (16c)")
+    processors=("1 (64c)" "1/2 (32c)" "1/4 (16c)")
 fi
 
 # ------------------------------- Processors Type ---------------------------- #
