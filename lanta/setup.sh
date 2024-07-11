@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# ------------------------------- Script Info -------------------------------- #
+
+# LANTA Setup Script
+# Version: 1.0.2
+
 # ------------------------------ Jupyter Script ------------------------------ #
 
 jupyter='''
@@ -8,21 +13,14 @@ USER=$(whoami)
 node=$(hostname -s)
 
 #jupyter notebookng instructions to the output file
-echo -e "
+echo -e "Jupyter server is running on: $(hostname)
+Job starts at: $(date)
 
-    Jupyter server is running on: $(hostname)
-    Job starts at: $(date)
-
-    Copy/Paste the following command into your local terminal
-    --------------------------------------------------------------------
-    ssh -L $port:$node:$port $USER@lanta.nstda.or.th -i id_rsa
-    --------------------------------------------------------------------
-
-    Open a browser on your local machine with the following address
-    --------------------------------------------------------------------
-    http://localhost:${port}/?token=XXXXXXXX (see your token below)
-    --------------------------------------------------------------------
-    "
+Copy/Paste the following command into your local terminal
+--------------------------------------------------------------------
+ssh -L $port:$node:$port $USER@lanta.nstda.or.th
+--------------------------------------------------------------------
+"
 
 ## start a cluster instance and launch jupyter server
 
@@ -30,8 +28,6 @@ unset XDG_RUNTIME_DIR
 if [ "$SLURM_JOBTMP" != "" ]; then
     export XDG_RUNTIME_DIR=$SLURM_JOBTMP
 fi
-
-jupyter notebook --no-browser --port $port --notebook-dir=$(pwd) --ip=$node
 '''
 
 # -------------------------- Select Option Function -------------------------- #
@@ -44,14 +40,13 @@ function select_option() {
         case $opt in
         "Quit")
             echo "Exiting..."
-            return 1
+            kill $$
+            exit 1
             ;;
         *)
             if [[ " ${options[*]} " =~ " ${opt} " ]]; then
                 selection="$opt"
                 break
-            else
-                echo "Invalid option $REPLY"
             fi
             ;;
         esac
@@ -62,27 +57,48 @@ function select_option() {
 
 tput clear
 
+# ------------------------------- Node Type ---------------------------------- #
+
 node_type=("compute" "gpu")
 echo "Please select one of the following options:"
 NODE_TYPE=$(select_option "${node_type[@]}")
 
-processors=("1 (128c)" "1/2 (64c)" "1/4 (32c)" "1/8 (16c)")
+if [ "$NODE_TYPE" == "${node_type[0]}" ]; then
+    processors=("1 (128c)" "1/2 (64c)" "1/4 (32c)" "1/8 (16c)")
+elif [ "$NODE_TYPE" == "${node_type[1]}" ]; then
+    processors=("1/2 (64c)" "1/4 (32c)" "1/8 (16c)")
+fi
+
+# ------------------------------- Processors Type ---------------------------- #
+
 echo "Please select one of the following options:"
 PROCESSORS_TYPE=$(select_option "${processors[@]}")
 
-if [ "$PROCESSORS_TYPE" == "${processors[0]}" ]; then
-    PROCESSORS_TYPE=128
-elif [ "$PROCESSORS_TYPE" == "${processors[1]}" ]; then
-    PROCESSORS_TYPE=64
-elif [ "$PROCESSORS_TYPE" == "${processors[2]}" ]; then
-    PROCESSORS_TYPE=32
-elif [ "$PROCESSORS_TYPE" == "${processors[3]}" ]; then
-    PROCESSORS_TYPE=16
+if [ "$NODE_TYPE" == "${node_type[0]}" ]; then
+    if [ "$PROCESSORS_TYPE" == "${processors[0]}" ]; then
+        PROCESSORS_TYPE=128
+    elif [ "$PROCESSORS_TYPE" == "${processors[1]}" ]; then
+        PROCESSORS_TYPE=64
+    elif [ "$PROCESSORS_TYPE" == "${processors[2]}" ]; then
+        PROCESSORS_TYPE=32
+    elif [ "$PROCESSORS_TYPE" == "${processors[3]}" ]; then
+        PROCESSORS_TYPE=16
+    fi
+elif [ "$NODE_TYPE" == "${node_type[1]}" ]; then
+    if [ "$PROCESSORS_TYPE" == "${processors[0]}" ]; then
+        PROCESSORS_TYPE=64
+    elif [ "$PROCESSORS_TYPE" == "${processors[1]}" ]; then
+        PROCESSORS_TYPE=32
+    elif [ "$PROCESSORS_TYPE" == "${processors[2]}" ]; then
+        PROCESSORS_TYPE=16
+    fi
 fi
 
 tput clear
 echo "Processors Type: $PROCESSORS_TYPE"
 echo ""
+
+# ------------------------------- GPU Count ---------------------------------- #
 
 if [ "$NODE_TYPE" == "gpu" ]; then
     gpu_options=("1" "2" "3" "4")
@@ -99,6 +115,8 @@ else
     GPUs="N/A"
     SPACES_NODE_TYPE="                "
 fi
+
+# ------------------------------- Time Limit --------------------------------- #
 
 echo "Please enter the maximum time limit (hour: minute: second):"
 read -p "Time limit: " TIME_LIMIT
@@ -128,6 +146,8 @@ fi
 echo "Processors Type: $PROCESSORS_TYPE"
 echo "Number of GPUs: $GPUs"
 echo "Time limit: $TIME_LIMIT"
+
+# ------------------------------- Project Name ------------------------------- #
 
 myquota
 
@@ -198,8 +218,22 @@ HF_DATASETS_OFFLINE=1
 TRANSFORMERS_OFFLINE=1
 EOF
 
+read -p "Starting Directory (leave blank if pwd): " notebookdir
+
+if [ -z "$notebookdir" ]; then
+    notebookdir=$(pwd)
+fi
+
+jupyter_type=("notebook" "lab")
+echo "Jupyter options (make sure to have it installed):"
+jupyter_option=$(select_option "${jupyter_type[@]}")
+
+port='''--port $port'''
+ip='''--ip=$node'''
+
 cat <<EOF >>./submit-$NODE_TYPE.sh
 $jupyter
+jupyter $jupyter_option --no-browser $port --notebook-dir=$notebookdir $ip
 EOF
 
 tput clear
@@ -208,6 +242,7 @@ echo "Parameters copied to submit-$NODE_TYPE.sh"
 
 cat ./submit-$NODE_TYPE.sh
 
-read -p "Confirm the file, then press enter to submit the job... "
-
-sbatch ./submit-$NODE_TYPE.sh
+read -p "Confirm the file, and type (Y/n)?" submit_script
+case "$submit_script" in
+y | Y) sbatch ./submit-$NODE_TYPE.sh ;;
+esac
