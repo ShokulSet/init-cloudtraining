@@ -6,6 +6,9 @@ This script will help you to install Jupyter Server on your server.
 
 ```bash
 ssh <name>@lanta.nstda.or.th
+
+# for high-bandwidth and downloading files
+ssh <name>@transfer.lanta.nstda.or.th
 ```
 
 ## Initializing the submit script
