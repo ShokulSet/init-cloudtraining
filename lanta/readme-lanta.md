@@ -16,7 +16,7 @@ ssh <name>@lanta.nstda.or.th
 mkdir scripts
 cd scripts
 
-wget https://github.com/Kentakoong/init-cloudtraining/releases/download/LANTA-1.0.1/setup.sh
+wget https://github.com/Kentakoong/init-cloudtraining/releases/download/LANTA-1.0.2/setup.sh
 
 bash setup.sh
 ```
@@ -119,6 +119,8 @@ conda env remove -n <env-name>
 `scancel` - Cancel a job.
 
 `sbalance` - Check the balance of the queue (GPU hours).
+
+`sinfo` - Check nodes that are both idle and running.
 
 ### my* commands
 
