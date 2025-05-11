@@ -6,7 +6,7 @@ This repository contains scripts for initializing the cloud server for training 
 
 [Scripts for LANTA](lanta/readme-lanta.md)
 
-## For SiamAI, follow the steps below
+## For SiamAI, follow the steps below (WIP)
 
 [Scripts for SiamAI](siamai/readmd-siamai.md)
 

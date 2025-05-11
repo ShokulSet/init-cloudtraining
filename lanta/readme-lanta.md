@@ -19,7 +19,7 @@ ssh <name>@transfer.lanta.nstda.or.th
 mkdir scripts
 cd scripts
 
-wget https://github.com/Kentakoong/init-cloudtraining/releases/download/LANTA-1.0.2/setup.sh
+wget https://github.com/ShokulSet/init-cloudtraining/releases/download/v1.0.3/setup.sh
 
 bash setup.sh
 ```
