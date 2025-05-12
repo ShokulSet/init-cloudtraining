@@ -11,6 +11,20 @@ ssh <name>@lanta.nstda.or.th
 ssh <name>@transfer.lanta.nstda.or.th
 ```
 
+## Check if you have Jupyter in conda
+```bash
+ml Mamba
+
+# check your available enviroments
+conda env list 
+conda activate <envname>
+
+#this should show Jupyter if you have it installed
+conda list | grep jupyter 
+```
+
+If you don't have conda installed please refer to guide below.
+
 ## Initializing the submit script
 
 ***Note: SSH into the server as the user created in the previous step first.***
